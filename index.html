@@ -54,6 +54,7 @@
     </div>
 
     <script type="module">
+      // ✅ Import Firebase Modules Correctly
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
       import {
         getAuth,
@@ -63,6 +64,7 @@
         signInWithPopup,
       } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
+      // ✅ Firebase Config (Your project details)
       const firebaseConfig = {
         apiKey: "AIzaSyAA5SAzBOguCIBwr6U9Lw-SGwH5Z90oe0s",
         authDomain: "travel-website-login-page.firebaseapp.com",
@@ -73,10 +75,12 @@
         measurementId: "G-YJD8LYMXXL",
       };
 
+      // ✅ Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const provider = new GoogleAuthProvider();
 
+      // ✅ Email/Password Login
       async function login() {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
@@ -87,12 +91,13 @@
             password
           );
           localStorage.setItem("userEmail", userCredential.user.email);
-          window.location.replace("landing.html");
+          window.location.href = "landing.html";
         } catch (error) {
           document.getElementById("message").innerText = error.message;
         }
       }
 
+      // ✅ Register New User
       async function register() {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
@@ -105,16 +110,18 @@
         }
       }
 
+      // ✅ Google Sign-In
       async function googleSignIn() {
         try {
           const result = await signInWithPopup(auth, provider);
           localStorage.setItem("userEmail", result.user.email);
-          window.location.replace("landing.html");
+          window.location.href = "landing.html";
         } catch (error) {
           document.getElementById("message").innerText = error.message;
         }
       }
 
+      // ✅ Attach functions to global scope (so buttons work)
       window.login = login;
       window.register = register;
       window.googleSignIn = googleSignIn;
