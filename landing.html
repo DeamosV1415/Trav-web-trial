@@ -5,9 +5,152 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Travel & Tourism Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Maps API script with Places library -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnDB4f-p96x2C0RcldKfhpElCfskS7yNw&libraries=places"></script>
+    <!-- Date Range Picker Dependencies -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+      .location-input-container {
+        position: relative;
+      }
+      .suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        z-index: 10;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .suggestion-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+      }
+      .suggestion-item:hover {
+        background-color: #f8f8f8;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-cover bg-center min-h-screen flex flex-col items-center justify-center text-white relative"
+    style="background-image: url('bg\ img.jpg')"
+  >
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+
+    <!-- Show Logged-in User -->
+    <div id="greeting" class="absolute top-4 left-4 text-lg font-semibold z-10">
+      Checking login...
+    </div>
+
+    <!-- Logout Button -->
+    <button
+      onclick="logout()"
+      class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg z-10"
+    >
+      Logout
+    </button>
+
+    <div class="relative text-center z-10 w-full max-w-4xl px-4">
+      <h1 class="text-4xl font-bold mb-6">Plan Your Perfect Trip</h1>
+      
+      <div class="bg-white bg-opacity-90 p-6 rounded-lg shadow-lg text-black mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- Source Location -->
+          <div class="location-input-container">
+            <label class="block text-gray-700 text-sm font-bold mb-2">From</label>
+            <div class="flex mb-1">
+              <input
+                type="text"
+                id="sourceLocation"
+                class="w-full p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter source location..."
+              />
+              <button
+                id="detectLocationBtn"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-r-lg"
+                title="Detect my location"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
+            <div id="sourceLocationSuggestions" class="suggestions hidden"></div>
+            <div id="locationStatus" class="text-xs text-gray-500"></div>
+          </div>
+
+          <!-- Destination Location -->
+          <div class="location-input-container">
+            <label class="block text-gray-700 text-sm font-bold mb-2">To</label>
+            <input
+              type="text"
+              id="destinationLocation"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter destination..."
+            />
+            <div id="destinationLocationSuggestions" class="suggestions hidden"></div>
+          </div>
+
+          <!-- Date Range Picker -->
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2">Travel Dates</label>
+            <input
+              type="text"
+              id="dateRange"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Select dates..."
+              readonly
+            />
+          </div>
+        </div>
+        
+        <!-- Search Button -->
+        <div class="mt-6">
+          <button
+            id="searchBtn"
+            class="w-full bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-lg font-bold transition-colors"
+          >
+            Find Your Adventure
+          </button>
+        </div>
+      </div>
+      
+      <!-- Featured Destinations Section (Example) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div class="bg-white bg-opacity-90 rounded-lg overflow-hidden shadow-lg">
+          <div class="h-40 bg-cover bg-center" style="background-image: url('https://via.placeholder.com/400x250?text=Paris')"></div>
+          <div class="p-4 text-black">
+            <h3 class="font-bold text-xl mb-2">Paris</h3>
+            <p class="text-gray-700">Experience the city of love and lights.</p>
+          </div>
+        </div>
+        
+        <div class="bg-white bg-opacity-90 rounded-lg overflow-hidden shadow-lg">
+          <div class="h-40 bg-cover bg-center" style="background-image: url('https://via.placeholder.com/400x250?text=Tokyo')"></div>
+          <div class="p-4 text-black">
+            <h3 class="font-bold text-xl mb-2">Tokyo</h3>
+            <p class="text-gray-700">Discover the perfect blend of tradition and modernity.</p>
+          </div>
+        </div>
+        
+        <div class="bg-white bg-opacity-90 rounded-lg overflow-hidden shadow-lg">
+          <div class="h-40 bg-cover bg-center" style="background-image: url('https://via.placeholder.com/400x250?text=New+York')"></div>
+          <div class="p-4 text-black">
+            <h3 class="font-bold text-xl mb-2">New York</h3>
+            <p class="text-gray-700">Explore the vibrant city that never sleeps.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script type="module">
-      // ✅ Import Firebase Modules
+      // Import Firebase Modules
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
       import {
         getAuth,
@@ -15,7 +158,7 @@
         signOut,
       } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
-      // ✅ Firebase Config (Same as login page)
+      // Firebase Config (Same as login page)
       const firebaseConfig = {
         apiKey: "AIzaSyAA5SAzBOguCIBwr6U9Lw-SGwH5Z90oe0s",
         authDomain: "travel-website-login-page.firebaseapp.com",
@@ -26,76 +169,206 @@
         measurementId: "G-YJD8LYMXXL",
       };
 
-      // ✅ Initialize Firebase
+      // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
 
-      // ✅ Check if user is logged in
+      // Check if user is logged in
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          document.getElementById("greeting").innerText = `Welcome, ${user.email}`;
+          // User is signed in, show email
+          document.getElementById(
+            "greeting"
+          ).innerText = `Welcome, ${user.email}`;
         } else {
+          // No user is signed in, redirect to login page
           window.location.href = "index.html";
         }
       });
 
-      // ✅ Logout function
+      // Logout function
       window.logout = async function () {
         await signOut(auth);
-        window.location.href = "index.html";
+        window.location.href = "index.html"; // Redirect to login page
       };
+    </script>
 
-      // ✅ Auto-detect user's location
-      function detectLocation() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const lat = position.coords.latitude;
-              const lng = position.coords.longitude;
-              const geocoder = new google.maps.Geocoder();
-              const latlng = { lat, lng };
-              geocoder.geocode({ location: latlng }, (results, status) => {
-                if (status === "OK" && results[0]) {
-                  document.getElementById("source").value = results[0].formatted_address;
-                }
-              });
-            },
-            () => console.warn("Location access denied. Please enter manually.")
-          );
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initialize location inputs with Google Places Autocomplete
+        initializeLocationAutocomplete();
+        
+        // Initialize date range picker
+        initializeDateRangePicker();
+        
+        // Setup geolocation detection
+        setupGeolocation();
+
+        // Setup search button
+        document.getElementById('searchBtn').addEventListener('click', searchTrips);
+      });
+
+      // Initialize Google Places Autocomplete for location inputs
+      function initializeLocationAutocomplete() {
+        // Source location autocomplete
+        const sourceInput = document.getElementById('sourceLocation');
+        const sourceSuggestions = document.getElementById('sourceLocationSuggestions');
+        setupAutocomplete(sourceInput, sourceSuggestions);
+        
+        // Destination location autocomplete
+        const destInput = document.getElementById('destinationLocation');
+        const destSuggestions = document.getElementById('destinationLocationSuggestions');
+        setupAutocomplete(destInput, destSuggestions);
+      }
+
+      // Setup autocomplete for a specific input field
+      function setupAutocomplete(inputElement, suggestionsContainer) {
+        // Add input event listener
+        inputElement.addEventListener('input', function() {
+          const query = this.value.trim();
+          if (query.length < 2) {
+            suggestionsContainer.classList.add('hidden');
+            return;
+          }
+          
+          // In a real implementation, you would call the Google Places API here
+          // For now, we'll simulate with a mock API call
+          fetchPlaceSuggestions(query, suggestionsContainer);
+        });
+        
+        // Add focus event to show suggestions
+        inputElement.addEventListener('focus', function() {
+          if (this.value.trim().length >= 2) {
+            suggestionsContainer.classList.remove('hidden');
+          }
+        });
+        
+        // Add blur event to hide suggestions (with delay to allow clicks)
+        inputElement.addEventListener('blur', function() {
+          setTimeout(() => {
+            suggestionsContainer.classList.add('hidden');
+          }, 200);
+        });
+      }
+
+      // Fetch place suggestions from Google Places API (simulated for now)
+      function fetchPlaceSuggestions(query, suggestionsContainer) {
+        // In production, replace with actual Google Places API call
+        // This is a simplified mock for demonstration
+        const mockSuggestions = [
+          `${query} City`,
+          `${query} International Airport`,
+          `${query} Downtown`,
+          `${query} Central Station`
+        ];
+        
+        // Clear previous suggestions
+        suggestionsContainer.innerHTML = '';
+        
+        // Add new suggestions
+        mockSuggestions.forEach(suggestion => {
+          const item = document.createElement('div');
+          item.className = 'suggestion-item';
+          item.textContent = suggestion;
+          item.addEventListener('click', () => {
+            suggestionsContainer.previousElementSibling.value = suggestion;
+            suggestionsContainer.classList.add('hidden');
+          });
+          suggestionsContainer.appendChild(item);
+        });
+        
+        // Show suggestions
+        suggestionsContainer.classList.remove('hidden');
+      }
+
+      // Initialize Flatpickr date range picker
+      function initializeDateRangePicker() {
+        flatpickr("#dateRange", {
+          mode: "range",
+          minDate: "today",
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "F j, Y",
+          showMonths: 2,
+          position: "auto center"
+        });
+      }
+
+      // Setup geolocation detection
+      function setupGeolocation() {
+        const detectBtn = document.getElementById('detectLocationBtn');
+        const statusDiv = document.getElementById('locationStatus');
+        
+        detectBtn.addEventListener('click', () => {
+          statusDiv.textContent = "Detecting your location...";
+          
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                // Success callback
+                const { latitude, longitude } = position.coords;
+                // In production, use Google's Geocoding API to convert coords to address
+                reverseGeocode(latitude, longitude);
+              },
+              (error) => {
+                // Error callback
+                statusDiv.textContent = `Error: ${getGeolocationErrorMessage(error)}`;
+                statusDiv.classList.add('text-red-500');
+              }
+            );
+          } else {
+            statusDiv.textContent = "Geolocation is not supported by your browser.";
+            statusDiv.classList.add('text-red-500');
+          }
+        });
+      }
+
+      // Convert geolocation error code to message
+      function getGeolocationErrorMessage(error) {
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            return "Location access denied. Please enter your location manually.";
+          case error.POSITION_UNAVAILABLE:
+            return "Location information unavailable. Please enter your location manually.";
+          case error.TIMEOUT:
+            return "Location request timed out. Please try again or enter manually.";
+          default:
+            return "An unknown error occurred. Please enter your location manually.";
         }
       }
 
-      // ✅ Initialize Google Places Autocomplete
-      function initializeAutocomplete() {
-        new google.maps.places.Autocomplete(document.getElementById("source"));
-        new google.maps.places.Autocomplete(document.getElementById("destination"));
+      // Reverse geocode coordinates to address (simulated)
+      function reverseGeocode(latitude, longitude) {
+        const sourceInput = document.getElementById('sourceLocation');
+        const statusDiv = document.getElementById('locationStatus');
+        
+        // In production, use Google's Geocoding API
+        // This is just a simulation
+        setTimeout(() => {
+          sourceInput.value = "Your Current Location";
+          statusDiv.textContent = `Location detected (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+          statusDiv.classList.remove('text-red-500');
+          statusDiv.classList.add('text-green-500');
+        }, 1000);
       }
 
-      window.onload = function () {
-        detectLocation();
-        initializeAutocomplete();
-      };
+      // Search trips function
+      function searchTrips() {
+        const source = document.getElementById('sourceLocation').value;
+        const destination = document.getElementById('destinationLocation').value;
+        const dates = document.getElementById('dateRange').value;
+        
+        if (!source || !destination || !dates) {
+          alert("Please fill in all fields to search for trips");
+          return;
+        }
+        
+        // In a real app, you would submit this data to your backend or navigate to results page
+        alert(`Searching for trips:\nFrom: ${source}\nTo: ${destination}\nDates: ${dates}`);
+        
+        // You can redirect to a results page or handle the search as needed
+        // window.location.href = `results.html?from=${encodeURIComponent(source)}&to=${encodeURIComponent(destination)}&dates=${encodeURIComponent(dates)}`;
+      }
     </script>
-  </head>
-  <body class="bg-cover bg-center h-screen flex items-center justify-center text-white relative" style="background-image: url('bg img.jpg')">
-    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-
-    <!-- 🔥 Show Logged-in User -->
-    <div id="greeting" class="absolute top-4 left-4 text-lg font-semibold">Checking login...</div>
-
-    <!-- 🔥 Logout Button -->
-    <button onclick="logout()" class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Logout</button>
-
-    <div class="relative text-center">
-      <h1 class="text-4xl font-bold mb-6">Plan Your Perfect Trip</h1>
-      <div class="flex flex-col space-y-4 w-full px-4 sm:w-1/2 mx-auto">
-        <input type="text" id="source" class="p-4 text-black rounded-lg focus:outline-none text-lg" placeholder="Enter source city..." />
-        <input type="text" id="destination" class="p-4 text-black rounded-lg focus:outline-none text-lg" placeholder="Enter destination city..." />
-        <input type="date" id="from-date" class="p-4 text-black rounded-lg focus:outline-none text-lg" />
-        <input type="date" id="to-date" class="p-4 text-black rounded-lg focus:outline-none text-lg" />
-        <button class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-lg">Search</button>
-      </div>
-    </div>
   </body>
 </html>
-
