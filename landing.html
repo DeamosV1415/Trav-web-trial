@@ -5,34 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Travel & Tourism Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Maps API script with Places library -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDnDB4f-p96x2C0RcldKfhpElCfskS7yNw&libraries=places"></script>
     <!-- Date Range Picker Dependencies -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
-      .location-input-container {
-        position: relative;
-      }
-      .suggestions {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        z-index: 10;
-        border-radius: 0 0 8px 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        max-height: 200px;
-        overflow-y: auto;
-      }
-      .suggestion-item {
-        padding: 10px;
-        cursor: pointer;
-        border-bottom: 1px solid #eee;
-      }
-      .suggestion-item:hover {
-        background-color: #f8f8f8;
+      .pac-container {
+        z-index: 1051 !important;
       }
     </style>
   </head>
@@ -61,7 +39,7 @@
       <div class="bg-white bg-opacity-90 p-6 rounded-lg shadow-lg text-black mb-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <!-- Source Location -->
-          <div class="location-input-container">
+          <div>
             <label class="block text-gray-700 text-sm font-bold mb-2">From</label>
             <div class="flex mb-1">
               <input
@@ -81,12 +59,11 @@
                 </svg>
               </button>
             </div>
-            <div id="sourceLocationSuggestions" class="suggestions hidden"></div>
-            <div id="locationStatus" class="text-xs text-gray-500"></div>
+            <div id="locationStatus" class="text-xs text-gray-500 h-4"></div>
           </div>
 
           <!-- Destination Location -->
-          <div class="location-input-container">
+          <div>
             <label class="block text-gray-700 text-sm font-bold mb-2">To</label>
             <input
               type="text"
@@ -94,7 +71,6 @@
               class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter destination..."
             />
-            <div id="destinationLocationSuggestions" class="suggestions hidden"></div>
           </div>
 
           <!-- Date Range Picker -->
@@ -121,7 +97,7 @@
         </div>
       </div>
       
-      <!-- Featured Destinations Section (Example) -->
+      <!-- Featured Destinations Section -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         <div class="bg-white bg-opacity-90 rounded-lg overflow-hidden shadow-lg">
           <div class="h-40 bg-cover bg-center" style="background-image: url('https://via.placeholder.com/400x250?text=Paris')"></div>
@@ -193,163 +169,121 @@
       };
     </script>
 
+    <!-- Google Maps API script with Places library (load at end of body) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIxaTQmywOJkn51QdU0zneqjJZvuzktsk&libraries=places&callback=initAutocomplete" async defer></script>
+
     <script>
+      // Initialize date range picker
       document.addEventListener('DOMContentLoaded', function() {
-        // Initialize location inputs with Google Places Autocomplete
-        initializeLocationAutocomplete();
-        
         // Initialize date range picker
-        initializeDateRangePicker();
-        
-        // Setup geolocation detection
-        setupGeolocation();
-
-        // Setup search button
-        document.getElementById('searchBtn').addEventListener('click', searchTrips);
-      });
-
-      // Initialize Google Places Autocomplete for location inputs
-      function initializeLocationAutocomplete() {
-        // Source location autocomplete
-        const sourceInput = document.getElementById('sourceLocation');
-        const sourceSuggestions = document.getElementById('sourceLocationSuggestions');
-        setupAutocomplete(sourceInput, sourceSuggestions);
-        
-        // Destination location autocomplete
-        const destInput = document.getElementById('destinationLocation');
-        const destSuggestions = document.getElementById('destinationLocationSuggestions');
-        setupAutocomplete(destInput, destSuggestions);
-      }
-
-      // Setup autocomplete for a specific input field
-      function setupAutocomplete(inputElement, suggestionsContainer) {
-        // Add input event listener
-        inputElement.addEventListener('input', function() {
-          const query = this.value.trim();
-          if (query.length < 2) {
-            suggestionsContainer.classList.add('hidden');
-            return;
-          }
-          
-          // In a real implementation, you would call the Google Places API here
-          // For now, we'll simulate with a mock API call
-          fetchPlaceSuggestions(query, suggestionsContainer);
-        });
-        
-        // Add focus event to show suggestions
-        inputElement.addEventListener('focus', function() {
-          if (this.value.trim().length >= 2) {
-            suggestionsContainer.classList.remove('hidden');
-          }
-        });
-        
-        // Add blur event to hide suggestions (with delay to allow clicks)
-        inputElement.addEventListener('blur', function() {
-          setTimeout(() => {
-            suggestionsContainer.classList.add('hidden');
-          }, 200);
-        });
-      }
-
-      // Fetch place suggestions from Google Places API (simulated for now)
-      function fetchPlaceSuggestions(query, suggestionsContainer) {
-        // In production, replace with actual Google Places API call
-        // This is a simplified mock for demonstration
-        const mockSuggestions = [
-          `${query} City`,
-          `${query} International Airport`,
-          `${query} Downtown`,
-          `${query} Central Station`
-        ];
-        
-        // Clear previous suggestions
-        suggestionsContainer.innerHTML = '';
-        
-        // Add new suggestions
-        mockSuggestions.forEach(suggestion => {
-          const item = document.createElement('div');
-          item.className = 'suggestion-item';
-          item.textContent = suggestion;
-          item.addEventListener('click', () => {
-            suggestionsContainer.previousElementSibling.value = suggestion;
-            suggestionsContainer.classList.add('hidden');
-          });
-          suggestionsContainer.appendChild(item);
-        });
-        
-        // Show suggestions
-        suggestionsContainer.classList.remove('hidden');
-      }
-
-      // Initialize Flatpickr date range picker
-      function initializeDateRangePicker() {
         flatpickr("#dateRange", {
           mode: "range",
           minDate: "today",
           dateFormat: "Y-m-d",
           altInput: true,
           altFormat: "F j, Y",
-          showMonths: 2,
-          position: "auto center"
+          showMonths: 2
         });
-      }
-
-      // Setup geolocation detection
-      function setupGeolocation() {
-        const detectBtn = document.getElementById('detectLocationBtn');
-        const statusDiv = document.getElementById('locationStatus');
         
-        detectBtn.addEventListener('click', () => {
-          statusDiv.textContent = "Detecting your location...";
-          
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                // Success callback
-                const { latitude, longitude } = position.coords;
-                // In production, use Google's Geocoding API to convert coords to address
-                reverseGeocode(latitude, longitude);
-              },
-              (error) => {
-                // Error callback
-                statusDiv.textContent = `Error: ${getGeolocationErrorMessage(error)}`;
-                statusDiv.classList.add('text-red-500');
-              }
-            );
-          } else {
-            statusDiv.textContent = "Geolocation is not supported by your browser.";
-            statusDiv.classList.add('text-red-500');
-          }
-        });
-      }
+        // Setup search button
+        document.getElementById('searchBtn').addEventListener('click', searchTrips);
+        
+        // Setup geolocation detection
+        document.getElementById('detectLocationBtn').addEventListener('click', detectCurrentLocation);
+      });
 
-      // Convert geolocation error code to message
-      function getGeolocationErrorMessage(error) {
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            return "Location access denied. Please enter your location manually.";
-          case error.POSITION_UNAVAILABLE:
-            return "Location information unavailable. Please enter your location manually.";
-          case error.TIMEOUT:
-            return "Location request timed out. Please try again or enter manually.";
-          default:
-            return "An unknown error occurred. Please enter your location manually.";
-        }
-      }
-
-      // Reverse geocode coordinates to address (simulated)
-      function reverseGeocode(latitude, longitude) {
+      // Function to initialize Google Places Autocomplete
+      function initAutocomplete() {
+        // Source location autocomplete
         const sourceInput = document.getElementById('sourceLocation');
-        const statusDiv = document.getElementById('locationStatus');
+        new google.maps.places.Autocomplete(sourceInput, {
+          types: ['(cities)']
+        });
         
-        // In production, use Google's Geocoding API
-        // This is just a simulation
-        setTimeout(() => {
-          sourceInput.value = "Your Current Location";
-          statusDiv.textContent = `Location detected (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
-          statusDiv.classList.remove('text-red-500');
-          statusDiv.classList.add('text-green-500');
-        }, 1000);
+        // Destination location autocomplete
+        const destInput = document.getElementById('destinationLocation');
+        new google.maps.places.Autocomplete(destInput, {
+          types: ['(cities)']
+        });
+      }
+      window.initAutocomplete = initAutocomplete;
+
+      // Detect current location using browser's geolocation API
+      function detectCurrentLocation() {
+        const statusDiv = document.getElementById('locationStatus');
+        statusDiv.textContent = "Detecting your location...";
+        statusDiv.className = "text-xs text-blue-500 h-4";
+        
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Success callback
+              const { latitude, longitude } = position.coords;
+              
+              // Use Google's Geocoding API to convert coordinates to address
+              const geocoder = new google.maps.Geocoder();
+              const latlng = { lat: latitude, lng: longitude };
+              
+              geocoder.geocode({ location: latlng }, (results, status) => {
+                if (status === 'OK') {
+                  if (results[0]) {
+                    // Find the city component from the address
+                    let city = '';
+                    for (let component of results[0].address_components) {
+                      if (component.types.includes('locality')) {
+                        city = component.long_name;
+                        break;
+                      }
+                    }
+                    
+                    // If no city was found, use a broader component
+                    if (!city) {
+                      for (let component of results[0].address_components) {
+                        if (component.types.includes('administrative_area_level_1')) {
+                          city = component.long_name;
+                          break;
+                        }
+                      }
+                    }
+                    
+                    // Update the source location input
+                    document.getElementById('sourceLocation').value = city || results[0].formatted_address;
+                    statusDiv.textContent = "Location detected successfully";
+                    statusDiv.className = "text-xs text-green-500 h-4";
+                  } else {
+                    statusDiv.textContent = "No results found";
+                    statusDiv.className = "text-xs text-red-500 h-4";
+                  }
+                } else {
+                  statusDiv.textContent = "Geocoder failed due to: " + status;
+                  statusDiv.className = "text-xs text-red-500 h-4";
+                }
+              });
+            },
+            (error) => {
+              // Error callback
+              let errorMessage = "";
+              switch(error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMessage = "Location access denied. Please enter your location manually.";
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMessage = "Location information unavailable. Please enter manually.";
+                  break;
+                case error.TIMEOUT:
+                  errorMessage = "Location request timed out. Please try again.";
+                  break;
+                default:
+                  errorMessage = "An unknown error occurred.";
+              }
+              statusDiv.textContent = errorMessage;
+              statusDiv.className = "text-xs text-red-500 h-4";
+            }
+          );
+        } else {
+          statusDiv.textContent = "Geolocation is not supported by your browser.";
+          statusDiv.className = "text-xs text-red-500 h-4";
+        }
       }
 
       // Search trips function
